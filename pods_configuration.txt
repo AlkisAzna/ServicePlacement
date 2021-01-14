@@ -1,0 +1,16 @@
+NAME                                               READY   STATUS    RESTARTS   AGE   IP         NODE                               NOMINATED NODE   READINESS GATES
+apache-deployment-87f5cd9d6-k6mgr                  1/1     Running   0          19h   10.0.1.5   gke-ixen-ixen-pool-0d9808bc-m2sm   <none>           <none>
+authzforce-deployment-74dd75c5d5-ttgcx             1/1     Running   0          19h   10.0.0.9   gke-ixen-ixen-pool-0d9808bc-nq5w   <none>           <none>
+comet-deployment-7d549f7d96-hpr6d                  1/1     Running   0          19h   10.0.1.3   gke-ixen-ixen-pool-0d9808bc-m2sm   <none>           <none>
+cygnus-deployment-788654b5f7-l8gbg                 1/1     Running   0          19h   10.0.0.5   gke-ixen-ixen-pool-0d9808bc-nq5w   <none>           <none>
+cygnusproxy-deployment-59dfbd659b-vk9dx            1/1     Running   0          19h   10.0.1.8   gke-ixen-ixen-pool-0d9808bc-m2sm   <none>           <none>
+keyrock-deployment-77d5cff6fb-2jsxc                1/1     Running   0          19h   10.0.1.7   gke-ixen-ixen-pool-0d9808bc-m2sm   <none>           <none>
+mongo-5cd5475687-ttd6l                             1/1     Running   0          19h   10.0.0.7   gke-ixen-ixen-pool-0d9808bc-nq5w   <none>           <none>
+mysql-deployment-8655c784d7-vfphw                  1/1     Running   0          19h   10.0.2.9   gke-ixen-ixen-pool-0d9808bc-bwb9   <none>           <none>
+nodered-deployment-7bbc78b7f5-l6j8q                1/1     Running   0          19h   10.0.0.6   gke-ixen-ixen-pool-0d9808bc-nq5w   <none>           <none>
+noderedproxy-deployment-6cbfc88c5d-fwgff           1/1     Running   0          19h   10.0.2.3   gke-ixen-ixen-pool-0d9808bc-bwb9   <none>           <none>
+orion-6d8595498f-xjqx8                             1/1     Running   0          19h   10.0.2.6   gke-ixen-ixen-pool-0d9808bc-bwb9   <none>           <none>
+orionproxy-deployment-7f89d65fbb-c96j8             1/1     Running   0          19h   10.0.0.4   gke-ixen-ixen-pool-0d9808bc-nq5w   <none>           <none>
+queryingsensors-6df56556f6-tr2ws                   1/1     Running   0          19h   10.0.0.8   gke-ixen-ixen-pool-0d9808bc-nq5w   <none>           <none>
+queryingsensorsproxy-deployment-5db66c4566-567cd   1/1     Running   0          19h   10.0.2.7   gke-ixen-ixen-pool-0d9808bc-bwb9   <none>           <none>
+sthcometproxy-deployment-6c5df6588c-jf4fq          1/1     Running   0          19h   10.0.1.6   gke-ixen-ixen-pool-0d9808bc-m2sm   <none>           <none>
