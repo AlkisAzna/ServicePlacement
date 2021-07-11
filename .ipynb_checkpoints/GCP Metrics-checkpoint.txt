@@ -1,0 +1,79 @@
+# CONNECT TO CLUSTER AND LIST ALL PODS
+
+credentials, project = google.auth.default(
+    scopes=['https://www.googleapis.com/auth/cloud-platform',])
+
+
+credentials.refresh(google.auth.transport.requests.Request())
+
+cluster_manager = ClusterManagerClient(credentials=credentials)
+cluster = cluster_manager.get_cluster(project_id, zone, cluster_id)
+config = client.Configuration()
+config.host = f'https://{cluster.endpoint}:443'
+config.verify_ssl = False
+config.api_key = {"authorization": "Bearer " + credentials.token}
+
+
+client.Configuration.set_default(config)
+
+kub = client.CoreV1Api()
+#print(kub.list_pod_for_all_namespaces(watch=False))
+
+#################################################################
+
+# 2nd way to connect to cluster
+
+from pprint import pprint
+
+from googleapiclient import discovery
+from oauth2client.client import GoogleCredentials
+
+credentials = GoogleCredentials.get_application_default()
+
+service = discovery.build('container', 'v1', credentials=credentials)
+
+parent = 'projects/'+project_id+'/locations/'+zone+'/clusters/'+cluster_id  # TODO: Update placeholder value.
+request = service.projects().locations().clusters().nodePools().list(parent=parent)
+response = request.execute()
+
+pprint(response)
+
+####################################################################
+
+#Monitoring time series - Not correct!
+
+#Create time series
+port time
+
+client = monitoring_v3.MetricServiceClient()
+# project = 'my-project'  # TODO: Update to your project ID.
+project_name = f"projects/"+project_id
+
+series = monitoring_v3.TimeSeries()
+series.metric.type = "custom.googleapis.com/my_metric"
+series.resource.type = "gce_instance"
+series.resource.labels["instance_id"] = "117516608152796399006"
+series.resource.labels["zone"] = zone
+now = time.time()
+seconds = int(now)
+nanos = int((now - seconds) * 10 ** 9)
+interval = monitoring_v3.TimeInterval(
+    {"end_time": {"seconds": seconds, "nanos": nanos}}
+)
+point = monitoring_v3.Point({"interval": interval, "value": {"double_value": 3.14}})
+series.points = [point]
+client.create_time_series(request={"name": project_name, "time_series": [series]})
+print("Successfully wrote time series.")
+
+
+#Get time series
+results = client.list_time_series(
+    request={
+        "name": project_name,
+        "filter": 'metric.type = "compute.googleapis.com/instance/memory/balloon/ram_used"',
+        "interval": interval,
+        "view": monitoring_v3.ListTimeSeriesRequest.TimeSeriesView.FULL,
+    }
+)
+for result in results:
+    print(result)
