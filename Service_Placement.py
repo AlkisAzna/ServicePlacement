@@ -20,6 +20,7 @@ import networkx as nx
 
 from Application_Graph import Application_Graph
 from Bin_Packing import Bin_Packing
+from Bisecting_K_means import Bisecting_K_means
 from GCP_Metrics import GCP_Metrics
 from Binary_Partition import Binary_Partition
 from Heuristic_First_Fit import Heuristic_First_Fit
@@ -141,7 +142,7 @@ def servicePlacement(host_ip):
         while alpha >= 0.0:
             bp = Binary_Partition(gcp_metrics_collector.current_pod_request_cpu,
                                   gcp_metrics_collector.current_pod_request_ram,
-                                  gcp_metrics_collector.service_affinities,
+                                  affinity_metric,
                                   gcp_metrics_collector.max_ram_allocation,
                                   gcp_metrics_collector.max_cpu_allocation,
                                   gcp_metrics_collector.host_list, gcp_metrics_collector.service_list)
@@ -162,7 +163,7 @@ def servicePlacement(host_ip):
                                       gcp_metrics_collector.current_pod_request_cpu,
                                       gcp_metrics_collector.current_pod_request_ram,
                                       gcp_metrics_collector.host_list,
-                                      gcp_metrics_collector.service_affinities)
+                                      affinity_metric)
 
             bin_packing.heuristic_packing()
             placement_solution = bin_packing.app_placement
@@ -185,7 +186,7 @@ def servicePlacement(host_ip):
         while alpha >= 0.0:
             kp = K_Partition(gcp_metrics_collector.current_pod_request_cpu,
                              gcp_metrics_collector.current_pod_request_ram,
-                             gcp_metrics_collector.service_affinities,
+                             affinity_metric,
                              gcp_metrics_collector.max_ram_allocation,
                              gcp_metrics_collector.max_cpu_allocation,
                              gcp_metrics_collector.host_list, gcp_metrics_collector.service_list)
@@ -206,7 +207,7 @@ def servicePlacement(host_ip):
                                       gcp_metrics_collector.current_pod_request_cpu,
                                       gcp_metrics_collector.current_pod_request_ram,
                                       gcp_metrics_collector.host_list,
-                                      gcp_metrics_collector.service_affinities)
+                                      affinity_metric)
 
             bin_packing.heuristic_packing()
             placement_solution = bin_packing.app_placement
@@ -216,54 +217,36 @@ def servicePlacement(host_ip):
                 alpha -= delta
 
         print("#" * 100)
-        print("Binary Partition - Bin Packing Solution")
+        print("K-Partition - Bin Packing Solution")
         print("-" * 40)
         pprint.pprint(placement_solution)
         print("#" * 100)
     elif int(option) == 4:
-        # Binary Partition - Bin Packing
-        alpha = 1.0
-        delta = 0.1
-        placement_solution = {}
+        # Bisecting K-Means - Bin Packing
+        bkm = Bisecting_K_means(affinity_metric, gcp_metrics_collector.service_list)
+        bkm.find_bistecting_K_means_partitions()
 
-        while alpha >= 0.0:
-            kp = K_Partition(gcp_metrics_collector.current_pod_request_cpu,
-                             gcp_metrics_collector.current_pod_request_ram,
-                             gcp_metrics_collector.service_affinities,
-                             gcp_metrics_collector.max_ram_allocation,
-                             gcp_metrics_collector.max_cpu_allocation,
-                             gcp_metrics_collector.host_list, gcp_metrics_collector.service_list)
+        # Bin Packing
+        bin_packing = Bin_Packing(bkm.app_clusters, gcp_metrics_collector.current_placement,
+                                  gcp_metrics_collector.node_initial_cpu_usage,
+                                  gcp_metrics_collector.node_initial_ram_usage,
+                                  gcp_metrics_collector.node_initial_available_cpu,
+                                  gcp_metrics_collector.node_initial_available_ram,
+                                  gcp_metrics_collector.current_pod_request_cpu,
+                                  gcp_metrics_collector.current_pod_request_ram,
+                                  gcp_metrics_collector.host_list,
+                                  affinity_metric)
 
-            kp.calculate_app_partitions(alpha)
-            # Insert Redis-Cart in Cart-Service partition
-            for key in kp.app_partition:
-                for x in range(len(kp.app_partition[key])):
-                    if 'cartservice' == kp.app_partition[key][x]:
-                        kp.app_partition[key].append('redis-cart')
-
-            # Bin Packing
-            bin_packing = Bin_Packing(kp.app_partition, gcp_metrics_collector.current_placement,
-                                      gcp_metrics_collector.node_initial_cpu_usage,
-                                      gcp_metrics_collector.node_initial_ram_usage,
-                                      gcp_metrics_collector.node_initial_available_cpu,
-                                      gcp_metrics_collector.node_initial_available_ram,
-                                      gcp_metrics_collector.current_pod_request_cpu,
-                                      gcp_metrics_collector.current_pod_request_ram,
-                                      gcp_metrics_collector.host_list,
-                                      gcp_metrics_collector.service_affinities)
-
-            bin_packing.heuristic_packing()
-            placement_solution = bin_packing.app_placement
-            if bool(placement_solution):
-                break
-            else:
-                alpha -= delta
-
-        print("#" * 100)
-        print("Binary Partition - Bin Packing Solution")
-        print("-" * 40)
-        pprint.pprint(placement_solution)
-        print("#" * 100)
+        bin_packing.heuristic_packing()
+        placement_solution = bin_packing.app_placement
+        if not bool(placement_solution):
+            print("ERROR: Placement solution hasn't been found!")
+        else:
+            print("#" * 100)
+            print("Bisecting K-Means Clustering - Bin Packing Solution")
+            print("-" * 40)
+            pprint.pprint(placement_solution)
+            print("#" * 100)
     else:
         return
 

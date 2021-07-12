@@ -117,7 +117,7 @@ class K_Partition:
                             curr_graph[key].remove(random_dest)
 
             # Update Source affinity - Remove Dest Service
-            if len(curr_graph) != 2 or edje_count != 2:
+            if len(curr_graph) != parts or edje_count != parts:
                 curr_graph[random_source].remove(random_dest)
                 affinities[random_source][random_dest] = '0.0'  # Empty affinity - Means that source contains dest
 

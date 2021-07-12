@@ -8,10 +8,11 @@ import random
 import sys
 
 
-class Bistectining_K_means:
+class Bisecting_K_means:
     def __init__(self, service_affinities, service_list):
         self.service_affinities = copy.deepcopy(service_affinities)
         self.service_list = service_list
+        self.total_nodes = len(service_list)
         self.app_clusters = {}
 
     def find_bistecting_K_means_partitions(self):
@@ -19,9 +20,10 @@ class Bistectining_K_means:
         while True:
             K_value = input('Choose value for K clusters to be created:')
             if K_value.isnumeric():
-                break
+                if int(K_value) <= self.total_nodes:
+                    break
             else:
-                print("Wrong Input! Given input is not an integer Value!")
+                print("Wrong Input! Given input is not an integer Value or greater than service list size!")
 
         parent_cluster = copy.deepcopy(self.service_list)
         self.app_clusters = {"1": parent_cluster}
@@ -45,11 +47,63 @@ class Bistectining_K_means:
             self.app_clusters.pop(index)
             cluster_affinities.pop(index)
 
-            # Pick random centroids and remove them from list
-            first_centroid = random.choice(parent_cluster)
-            parent_cluster.remove(first_centroid)
-            second_centroid = random.choice(parent_cluster)
-            parent_cluster.remove(second_centroid)
+            # Pick centroids according to less or no affinities and remove them from list
+            if len(parent_cluster) == 2:
+                # Cluster contains only 2 services - > Make them centroids
+                first_centroid = random.choice(parent_cluster)
+                parent_cluster.remove(first_centroid)
+                second_centroid = random.choice(parent_cluster)
+                parent_cluster.remove(second_centroid)
+            else:
+                centroids_found = False
+                min_affinity = sys.float_info.max
+                first_centroid = ""
+                second_centroid = ""
+                # Cluster contains more than 2 clusters -> Find min or no affinity and pick the centroids accordingly
+                for first_service in parent_cluster:
+                    for second_service in parent_cluster:
+                        if first_service == second_service:
+                            # Same service
+                            continue
+                        else:
+                            # Check for affinity
+                            if first_service in self.service_affinities:
+                                if second_service in self.service_affinities[first_service]:
+                                    if min_affinity > float(self.service_affinities[first_service][second_service]):
+                                        min_affinity = float(self.service_affinities[first_service][second_service])
+                                        first_centroid = first_service
+                                        second_centroid = second_service
+                                else:
+                                    # They dont have an affinity so pick them for centroids
+                                    centroids_found = True
+                                    first_centroid = first_service
+                                    second_centroid = second_service
+                                    break
+                            elif second_service in self.service_affinities:
+                                if first_service in self.service_affinities[second_service]:
+                                    if min_affinity > float(self.service_affinities[second_service][first_service]):
+                                        min_affinity = float(self.service_affinities[second_service][first_service])
+                                        first_centroid = first_service
+                                        second_centroid = second_service
+                                else:
+                                    # They dont have an affinity so pick them for centroids
+                                    centroids_found = True
+                                    first_centroid = first_service
+                                    second_centroid = second_service
+                                    break
+                            else:
+                                # They dont have an affinity so pick them for centroids
+                                centroids_found = True
+                                first_centroid = first_service
+                                second_centroid = second_service
+                                break
+
+                                # Check if centroids have been found
+                    if centroids_found:
+                        break
+
+                parent_cluster.remove(first_centroid)
+                parent_cluster.remove(second_centroid)
 
             # Create Lists for centroids
             self.app_clusters[last_index] = [first_centroid]
