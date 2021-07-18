@@ -3,6 +3,7 @@
 ######################################################
 import copy
 import json
+import pprint
 import re
 import requests
 import operator
@@ -39,6 +40,12 @@ class GCP_Metrics:
         self.pod_usage_cpu = {}
         self.pod_usage_ram = {}
 
+        # Traffic measurements
+        self.traffic_requested_bytes = {}
+        self.traffic_responsed_bytes = {}
+        self.traffic_requested_count = {}
+        self.traffic_responsed_count = {}
+
         # Service Affinities
         self.total_edjes = 0
         self.response_times = {}
@@ -65,8 +72,9 @@ class GCP_Metrics:
         response = requests.request("GET", self.url_prometheus, headers=headers_prometheus, params=app_request)
         result = json.loads(response.text)
         for x in result['data']['result']:
-            self.host_list.append(x['metric']['node'])
-            self.node_request_cpu[x['metric']['node']] = format(float(x['value'][1]), '.3f')
+            if bool(x['metric']):
+                self.host_list.append(x['metric']['node'])
+                self.node_request_cpu[x['metric']['node']] = format(float(x['value'][1]), '.3f')
 
         self.number_of_hosts = len(self.host_list)
         self.max_cpu_allocation = format(float(max(self.node_request_cpu.values())), '.3f')
@@ -77,7 +85,8 @@ class GCP_Metrics:
         response = requests.request("GET", self.url_prometheus, headers=headers_prometheus, params=app_request)
         result = json.loads(response.text)
         for node in result['data']['result']:
-            self.node_request_ram[node['metric']['node']] = format(float(node['value'][1]), '.3f')
+            if bool(node['metric']):
+                self.node_request_ram[node['metric']['node']] = format(float(node['value'][1]), '.3f')
         self.max_ram_allocation = format(float(max(self.node_request_ram.values())), '.3f')
 
         # CPU allocation
@@ -222,8 +231,11 @@ class GCP_Metrics:
                 protocol = result["elements"]["edges"][i]["data"]["traffic"]["protocol"]  # Protocol of communication
                 self.service_affinities[services_id[source_id]][services_id[destination_id]] = \
                     result["elements"]["edges"][i]["data"]["traffic"]["rates"][protocol]
-                self.response_times[services_id[source_id]][services_id[destination_id]] = \
-                    result["elements"]["edges"][i]["data"]["responseTime"]
+                try:
+                    self.response_times[services_id[source_id]][services_id[destination_id]] = \
+                        result["elements"]["edges"][i]["data"]["responseTime"]
+                except:
+                    continue
 
         # Sort Affinities
         self.sorted_service_affinities = copy.deepcopy(self.service_affinities)
@@ -267,9 +279,26 @@ class GCP_Metrics:
         for x in range(total_queries):
             source_app = req_result['data']['result'][x]['metric']['source_app']
             if source_app not in self.total_affinities_bytes:
+                self.traffic_requested_bytes[source_app] = {}
+                self.traffic_responsed_bytes[source_app] = {}
+                self.traffic_requested_count[source_app] = {}
+                self.traffic_responsed_count[source_app] = {}
                 self.total_affinities_bytes[source_app] = {}
             dest_app = req_result['data']['result'][x]['metric']['destination_app']
-            self.total_affinities_bytes[source_app][dest_app] = format(float((float(req_result['data']['result'][x]['value'][1]) + float(resp_result['data']['result'][x]['value'][1])) / (float(req_count_result['data']['result'][x]['value'][1]) + float(resp_count_result['data']['result'][x]['value'][1]))), '.3f')
+            self.traffic_requested_bytes[source_app][dest_app] = float(req_result['data']['result'][x]['value'][1])
+            self.traffic_responsed_bytes[source_app][dest_app] = float(resp_result['data']['result'][x]['value'][1])
+            self.traffic_requested_count[source_app][dest_app] = float(
+                req_count_result['data']['result'][x]['value'][1])
+            self.traffic_responsed_count[source_app][dest_app] = float(
+                resp_count_result['data']['result'][x]['value'][1])
+            self.total_affinities_bytes[source_app][dest_app] = format(float((float(
+                req_result['data']['result'][x]['value'][1]) + float(resp_result['data']['result'][x]['value'][1])) / (
+                                                                                     float(req_count_result['data'][
+                                                                                               'result'][x][
+                                                                                               'value'][1]) + float(
+                                                                                 resp_count_result['data'][
+                                                                                     'result'][x]['value'][1]))),
+                                                                       '.3f')
 
         # Assemble all affinities in one matrix in decent order
         for source_key in self.total_affinities_bytes:
@@ -326,8 +355,10 @@ class GCP_Metrics:
                     total_requested_cpu += float(self.current_pod_request_cpu[service])
                     total_requested_ram += float(self.current_pod_request_ram[service])
 
-                self.node_initial_available_cpu[host] = float(self.node_initial_available_cpu[host]) + total_requested_cpu
-                self.node_initial_available_ram[host] = float(self.node_initial_available_ram[host]) + total_requested_ram
+                self.node_initial_available_cpu[host] = float(
+                    self.node_initial_available_cpu[host]) + total_requested_cpu
+                self.node_initial_available_ram[host] = float(
+                    self.node_initial_available_ram[host]) + total_requested_ram
                 self.node_initial_cpu_usage[host] = float(self.node_initial_cpu_usage[host]) - total_requested_cpu
                 self.node_initial_ram_usage[host] = float(self.node_initial_ram_usage[host]) - total_requested_ram
 

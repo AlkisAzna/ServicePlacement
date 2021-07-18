@@ -79,7 +79,7 @@ class Bin_Packing():
                         max_host = host
 
             # Check max_host
-            if max_host == '': # No host found -> return
+            if max_host == '':  # No host found -> return
                 return {}
             else:
                 # Update Resources

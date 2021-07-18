@@ -15,16 +15,7 @@ class Bisecting_K_means:
         self.total_nodes = len(service_list)
         self.app_clusters = {}
 
-    def find_bistecting_K_means_partitions(self):
-        # Insert K-Value
-        while True:
-            K_value = input('Choose value for K clusters to be created:')
-            if K_value.isnumeric():
-                if int(K_value) <= self.total_nodes:
-                    break
-            else:
-                print("Wrong Input! Given input is not an integer Value or greater than service list size!")
-
+    def find_bistecting_K_means_partitions(self, k_value):
         parent_cluster = copy.deepcopy(self.service_list)
         self.app_clusters = {"1": parent_cluster}
         cluster_affinities = {"1": 0.0}
@@ -32,7 +23,7 @@ class Bisecting_K_means:
         index = -1
         last_index = 1
 
-        while cluster_count < int(K_value):
+        while cluster_count < int(k_value):
             # Find the cluster with the least sum of affinities - Maximum Error
             min_total_affinity = sys.float_info.max
             for x in self.app_clusters:
