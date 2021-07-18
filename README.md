@@ -1,16 +1,13 @@
-# ServicesPlacement
-A Service Placement algorithm to produce a better Clustering of Pods inside Nodes (VMs) according to Node Affinities of an App called iXen running on Kubernetes Engine on GCP
+# Cloud Service Placement Diploma Thesis
+Above is implemented a placement solution strategy for various algorithms to produce a more cost-efficient Kubernetes Pods placement in the current application used.
 
-INFO: The Kubernetes Cluster can run and be processed from any engine host including local process like minikube.
+## Algorithms Presented
+1) Heuristic First Fit Algorithm
+2) Binary Partition - Bin Packing
+3) K-Partition - Bin Packing
+4) Bisecting K-Means - Bin Packing
 
-## Setting up Kubernetes Cluster
-1) Create a Kubernetes Cluster 
-2) Deploy the App
+## Application Used
+The application used was a development by Google Cloud Platform for benchmarking presenting an [OnlineBoutique Shop](https://github.com/GoogleCloudPlatform/microservices-demo).
 
-## Get Cluster Information
-Run **kubectl get pods -o wide > <file_name>.<file_format>** to get the configuration of Cluster Pods and the Nodes they are running in.
-
-## Current Repository
-Run **kubectl get pods -o wide > pods_configuration.txt** and then run python main_system.py.
-
-INFO: At the time we support only txt formats
+INFO: The Kubernetes Cluster can run and be processed from any engine host including local process with minikube.
